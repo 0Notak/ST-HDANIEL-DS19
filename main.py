@@ -13,47 +13,44 @@ def message():
 
 
 @app.get('/developer/')
-def developer(desarrollador: str) -> dict:
-    # Filtrar el DataFrame por el desarrollador proporcionado
-    df_desarrollador = DataSet_Final[DataSet_Final['developer'] == desarrollador]
+def developer(desarrollador: str):
+    # Filtrar el DataFrame por la empresa desarrolladora especificada
+    developer_data = DataSet_Final[DataSet_Final['developer'] == desarrollador]
 
-    # Sumar los valores de la columna "items" por año
-    sum_items_por_ano = df_desarrollador.groupby('anio')['items_count'].sum()
+    # Agrupar los datos por año y empresa desarrolladora
+    grouped_data = developer_data.groupby(['anioyear'])
 
-    # Calcular el porcentaje de valores iguales a 0.0 en la columna "precio" por año
-    total_por_ano = df_desarrollador.groupby('anio')['price'].count()
-    count_zeros_por_ano = df_desarrollador[df_desarrollador['price'] == 0.0].groupby('anio')['price'].count()
-    porcentaje_zeros_por_ano = (count_zeros_por_ano / total_por_ano) * 100
+    # Inicializar diccionarios para almacenar la cantidad de ítems y el porcentaje de contenido gratuito por año
+    cantidad_items_por_anio = {}
+    porcentaje_contenido_free_por_anio = {}
 
-    # Retornar un diccionario con los resultados
+    # Iterar sobre los grupos
+    for year, group in grouped_data:
+        # Calcular la cantidad de ítems por año
+        cantidad_items = len(group['item_id'])
+
+        # Calcular el porcentaje de contenido gratuito por año
+        contenido_free = group[group['price'] == 0]
+        cantidad_contenido_free = len(contenido_free)
+        porcentaje_free = (cantidad_contenido_free / cantidad_items) * 100 if cantidad_items != 0 else 0
+
+        # Almacenar los resultados en los diccionarios
+        cantidad_items_por_anio[year] = cantidad_items
+        porcentaje_contenido_free_por_anio[year] = porcentaje_free
+
     return {
-        'Suma de Items Por Año': sum_items_por_ano.to_dict(),
-        'Porcentaje Contenido Free': porcentaje_zeros_por_ano.to_dict()
-    }
+        print("Cantidad de ítems por año:", cantidad_items_por_anio, 
+              "Porcentaje de contenido gratuito por año:", porcentaje_contenido_free_por_anio) 
+              }
+
 
 @app.get('/user_data/')
-def userdata(User_id: str) -> dict:
-    # Filtrar el DataFrame por el User_id proporcionado
-    user_data = DataSet_Final[DataSet_Final['user_id'] == User_id]
-
-    # Calcular la cantidad de dinero gastado por el usuario
-    dinero_gastado = user_data['price'].sum()
-
-    # Calcular el porcentaje de recomendación
-    total_recomendaciones = user_data['recommend'].count()
-    recomendaciones_positivas = user_data['recommend'].sum()
-    porcentaje_recomendacion = (recomendaciones_positivas / total_recomendaciones) * 100
-
-    # Calcular la cantidad de items del usuario
-    cantidad_items = user_data['items_count'].sum()
-
-    # Retornar un diccionario con los resultados
-    return {
-        "Usuario": User_id,
-        "Dinero gastado": f"{dinero_gastado} USD",
-        "% de recomendación": f"{porcentaje_recomendacion}%",
-        "Cantidad de items": cantidad_items
-    }
+def userdata(user_id:str):
+    df_filtrado = DataSet_Final.loc[DataSet_Final["user_id"]== user_id]
+    total_items= df_filtrado['item_id'].nunique()
+    porcentaje_recomendacion= (df_filtrado['recommend'].sum() / total_items) * 100
+    cantidad_dinero= df_filtrado['price'].sum()
+    return {f'usuario':user_id, 'porcentaje de recomendacion':porcentaje_recomendacion, 'dinero gastado':cantidad_dinero}
 
 @app.get('/UserForGenre/')
 def UserForGenre(genero: str) -> dict:
@@ -101,11 +98,9 @@ def developer_reviews_analysis(desarrolladora: str):
     developer_data = DataSet_Final[DataSet_Final['developer'] == desarrolladora]
 
     # Contar la cantidad de reseñas positivas, neutras y negativas
-    positive_reviews = (developer_data['sentiment_score'] == 2).value_counts()
-    neutral_reviews = (developer_data['sentiment_score'] == 1).value_counts()
-    negative_reviews = (developer_data['sentiment_score'] == 0).value_counts()
+    positive_reviews = (developer_data['sentiment_score'] == 2).sum()
+    neutral_reviews = (developer_data['sentiment_score'] == 1).sum()
+    negative_reviews = (developer_data['sentiment_score'] == 0).sum()
 
     # Construir el diccionario de retorno
     return {desarrolladora: {'Positive': positive_reviews, 'Neutral': neutral_reviews, 'Negative': negative_reviews}}
-
-# Aquí puedes especificar el nombre del desarrollador que deseas analizar
