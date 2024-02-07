@@ -12,7 +12,7 @@ def message():
     return 'PROYECTO INTEGRADOR ML OPS de Hevert Daniel Martinez (agregar /docs al enlace para acceder a las funciones / add /docs to link to access features)'
 
 
-@app.get('/developer/')
+@app.get('/developer/') 
 def developer(desarrollador: str):
     # Filtrar el DataFrame por la empresa desarrolladora especificada
     developer_data = DataSet_Final[DataSet_Final['developer'] == desarrollador]
@@ -78,7 +78,7 @@ def UserForGenre(genero: str) -> dict:
 @app.get('/best_developer_year/')
 def best_developer_year(año: int):
     # Filtrar el dataset por el año especificado
-    year_data = DataSet_Final[DataSet_Final['anio'] == año]
+    year_data = DataSet_Final[DataSet_Final['anioyear'] == año]
 
     # Contar la cantidad de juegos recomendados por desarrollador para el año dado
     developer_recommendations = year_data['developer'].value_counts()
